@@ -5,7 +5,7 @@ from sqlalchemy.pool import NullPool
 from app.core.config import settings
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.SQLALCHEMY_DATABASE_URI,
     poolclass=NullPool,  # REQUIRED for Supabase pooler
 )
 
