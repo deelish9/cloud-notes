@@ -4,6 +4,12 @@
 
 ![Deep Note App Screenshot](https://placehold.co/1200x600/18181b/ffffff?text=Cloud+Notes+Dashboard)
 
+## CloudNotes in Action 🚀
+
+https://github.com/user-attachments/assets/dd1184e6-e8b4-43eb-b8d8-aa8ce39da12d
+
+---
+
 ## 🎯 The Problem
 *   **Information Overload**: hour-long lectures, meetings, and tutorials are hard to reference.
 *   **Lost Context**: Text-only transcripts miss visual details (slides, code snippets).
