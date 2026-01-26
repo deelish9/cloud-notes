@@ -63,7 +63,7 @@ Cloud Notes provides a unified **Video Studio** and **Notebook** interface. Uplo
 ## 📊 Project Structure
 
 ```bash
-cloud-notes-app/
+cloud-notes/
 ├── backend/                 # Python FastAPI Microservice
 │   ├── app/
 │   │   ├── api/            # REST endpoints
