@@ -2,8 +2,6 @@
 
 **Cloud Notes** is a state-of-the-art SaaS platform that transforms raw video footage into structured, searchable, and actionable notes. Leveraging multimodal AI (Google Gemini 2.0), it handles the heavy lifting of audio extraction, transcription, and intelligent summarization, giving users a "second brain" for their video content.
 
-![Deep Note App Screenshot](https://placehold.co/1200x600/18181b/ffffff?text=Cloud+Notes+Dashboard)
-
 ## CloudNotes in Action 🚀
 
 https://github.com/user-attachments/assets/dd1184e6-e8b4-43eb-b8d8-aa8ce39da12d
