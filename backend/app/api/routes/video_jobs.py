@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.video_job import VideoJob
 from app.models.note import Note
-from app.services.gcs import upload_video_to_gcs, generate_signed_url
+from app.services.gcs import upload_video_to_gcs, generate_signed_url, generate_upload_signed_url
 
 from rq import Queue
 import redis
@@ -43,10 +43,62 @@ def get_db_user(db: Session, clerk_user_id: str) -> User:
 class TranscriptIn(BaseModel):
     transcript: str
 
+class UploadUrlIn(BaseModel):
+    content_type: str
+
+class CreateJobIn(BaseModel):
+    filename: str
+    blob_name: str
+
 
 # --------------------
 # Routes
 # --------------------
+# --------------------
+# Routes
+# --------------------
+@router.post("/upload-url")
+def get_upload_url(
+    payload: UploadUrlIn,
+    db: Session = Depends(get_db),
+    clerk_user_id: str = Depends(get_current_clerk_user_id),
+):
+    """
+    Step 1: Get a signed URL to upload the video directly to GCS.
+    """
+    return generate_upload_signed_url(payload.content_type)
+
+
+@router.post("")
+def create_video_job_from_blob(
+    payload: CreateJobIn,
+    db: Session = Depends(get_db),
+    clerk_user_id: str = Depends(get_current_clerk_user_id),
+):
+    """
+    Step 2: After client uploads to GCS, create the job record.
+    """
+    user = get_db_user(db, clerk_user_id)
+    
+    # We trust the client has uploaded the file to payload.blob_name
+    # (In a real app, we might verify existence via GCS client)
+    
+    job = VideoJob(
+        owner_id=user.id,
+        filename=payload.filename,
+        video_url=payload.blob_name,
+        status="queued",
+    )
+
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    # Queue the job
+    queue.enqueue(generate_video_summary, job.id)
+
+    return job
+
 @router.post("/upload")
 def upload_video_job(
     file: UploadFile = File(...),

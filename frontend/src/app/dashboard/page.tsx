@@ -248,23 +248,58 @@ export default function DashboardPage() {
     }
 
     try {
-      setVideoStatus("Uploading...");
+      setVideoStatus("Initializing upload...");
       const token = await getToken({ template: "cloud-notes" });
 
-      const form = new FormData();
-      form.append("file", videoFile);
-
-      const res = await fetch(`${apiUrl}/video-jobs/upload`, {
+      // Step 1: Get Signed URL
+      const urlRes = await fetch(`${apiUrl}/video-jobs/upload-url`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: form,
+        body: JSON.stringify({ content_type: videoFile.type }),
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        setVideoStatus(`Upload failed (${res.status}): ${text}`);
+      if (!urlRes.ok) {
+        const text = await urlRes.text();
+        setVideoStatus(`Init failed: ${text}`);
+        return;
+      }
+      const { url, blob_name } = await urlRes.json();
+
+      // Step 2: Upload to GCS
+      setVideoStatus("Uploading to cloud...");
+      const uploadRes = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": videoFile.type,
+        },
+        body: videoFile,
+      });
+
+      if (!uploadRes.ok) {
+        setVideoStatus("Upload to cloud failed.");
+        return;
+      }
+
+      // Step 3: Create Job Record
+      setVideoStatus("Finalizing...");
+      const jobRes = await fetch(`${apiUrl}/video-jobs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          filename: videoFile.name,
+          blob_name: blob_name,
+        }),
+      });
+
+      if (!jobRes.ok) {
+        const text = await jobRes.text();
+        setVideoStatus(`Job creation failed: ${text}`);
         return;
       }
 

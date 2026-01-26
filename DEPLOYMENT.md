@@ -48,7 +48,26 @@ gcloud run deploy notes-api \
   # For simplicity, if you must use a file, you can mount it as a secret in Cloud Run UI later.
 ```
 
-### 3. Deploy the Worker Service
+### 3. Google Cloud Storage (GCS)
+We use a **Signed URL** flow to bypass the 32MB request limit of Cloud Run and Vercel.
+1.  Frontend requests a signed upload URL from Backend.
+2.  Backend generates a `PUT` URL (valid for 15 mins).
+3.  Frontend uploads the file directly to GCS.
+4.  Frontend notifies Backend to create the job.
+
+**CORS Configuration** (Applied automatically):
+```json
+[
+    {
+      "origin": ["*"],
+      "method": ["GET", "PUT", "OPTIONS"],
+      "responseHeader": ["Content-Type", "x-goog-resumable"],
+      "maxAgeSeconds": 3600
+    }
+]
+```
+
+### 4. Deploy the Worker Service
 Deploy the RQ Worker (Sidecar). This needs a different entrypoint.
 
 ```bash

@@ -49,11 +49,35 @@ def generate_signed_url(object_name: str, minutes: int = 60) -> str:
     bucket = client.bucket(settings.GCS_BUCKET_NAME)
     blob = bucket.blob(object_name)
 
+
     return blob.generate_signed_url(
         version="v4",
         expiration=timedelta(minutes=minutes),
         method="GET",
     )
+
+def generate_upload_signed_url(content_type: str, minutes: int = 15) -> dict:
+    """
+    Generates a temporary signed URL for uploading a video directly to GCS.
+    """
+    bucket = client.bucket(settings.GCS_BUCKET_NAME)
+    
+    # Generate unique filename on server side
+    ext = "mp4" # Default, or could extract from content_type
+    if "quicktime" in content_type: ext = "mov"
+    elif "webm" in content_type: ext = "webm"
+    
+    blob_name = f"videos/{uuid.uuid4()}.{ext}"
+    blob = bucket.blob(blob_name)
+
+    url = blob.generate_signed_url(
+        version="v4",
+        expiration=timedelta(minutes=minutes),
+        method="PUT",
+        content_type=content_type,
+    )
+    
+    return {"url": url, "blob_name": blob_name}
 
 def download_video_from_gcs(blob_name: str) -> str:
     """
