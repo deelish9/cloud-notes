@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Secrets
+gcs-key.json
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log

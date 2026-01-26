@@ -1,0 +1,31 @@
+services:
+  api:
+    build: .
+    container_name: notes_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      GCS_KEY_PATH: /code/gcs-key.json
+    volumes:
+      - .:/code
+      - ./gcs-key.json:/code/gcs-key.json:ro
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    command: python -m app.worker
+    environment:
+      GCS_KEY_PATH: /code/gcs-key.json
+    volumes:
+      - .:/code
+      - ./gcs-key.json:/code/gcs-key.json:ro
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
