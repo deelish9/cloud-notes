@@ -17,8 +17,8 @@ from app.jobs.video_summary import generate_video_summary
 # --------------------
 # Queue setup
 # --------------------
-import os
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+from app.core.config import settings
+REDIS_URL = settings.REDIS_URL
 redis_conn = redis.from_url(REDIS_URL)
 queue = Queue("video-jobs", connection=redis_conn)
 

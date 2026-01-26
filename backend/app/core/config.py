@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
     GCS_KEY_PATH: str = os.getenv("GCS_KEY_PATH", "/code/gcs-key.json")
     GCS_BUCKET_NAME: str | None = os.getenv("GCS_BUCKET_NAME")
+    REDIS_URL: str = "redis://redis:6379"
 
     class Config:
         env_file = ".env"

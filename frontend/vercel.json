@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "https://notes-api-30096187962.us-central1.run.app/:path*"
+        }
+    ]
+}
