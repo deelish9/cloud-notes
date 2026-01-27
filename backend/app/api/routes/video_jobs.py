@@ -54,10 +54,7 @@ class CreateJobIn(BaseModel):
 # --------------------
 # Routes
 # --------------------
-# --------------------
-# Routes
-# --------------------
-@router.post("/upload-url")
+@router.post("/signed-url")
 def get_upload_url(
     payload: UploadUrlIn,
     db: Session = Depends(get_db),

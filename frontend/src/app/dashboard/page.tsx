@@ -252,7 +252,7 @@ export default function DashboardPage() {
       const token = await getToken({ template: "cloud-notes" });
 
       // Step 1: Get Signed URL
-      const urlRes = await fetch(`${apiUrl}/video-jobs/upload-url`, {
+      const urlRes = await fetch(`${apiUrl}/video-jobs/signed-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
