@@ -110,3 +110,20 @@ def upload_audio_to_gcs(file_path: str) -> str:
     blob.upload_from_filename(file_path)
     
     return blob_name
+
+def delete_file_from_gcs(blob_name: str):
+    """
+    Deletes a file from GCS.
+    """
+    if not settings.GCS_BUCKET_NAME:
+        # If no bucket configured (e.g. dev), just ignore
+        return
+
+    try:
+        bucket = client.bucket(settings.GCS_BUCKET_NAME)
+        blob = bucket.blob(blob_name)
+        blob.delete()
+        print(f"Deleted {blob_name} from GCS")
+    except Exception as e:
+        # Log error but don't crash
+        print(f"Failed to delete {blob_name} from GCS: {e}")

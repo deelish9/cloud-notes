@@ -53,3 +53,41 @@ body {
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
+/* Responsive Dashboard Helpers */
+.dashboard-container {
+  display: flex;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.dashboard-sidebar {
+  flex: 0 0 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-main {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 32px;
+  min-height: 600px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  
+  .dashboard-sidebar {
+    flex: none;
+    width: 100%;
+  }
+  
+  .dashboard-main {
+    min-height: auto;
+  }
+}

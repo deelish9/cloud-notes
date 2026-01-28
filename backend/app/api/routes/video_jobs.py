@@ -7,7 +7,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.video_job import VideoJob
 from app.models.note import Note
-from app.services.gcs import upload_video_to_gcs, generate_signed_url, generate_upload_signed_url
+from app.services.gcs import upload_video_to_gcs, generate_signed_url, generate_upload_signed_url, delete_file_from_gcs
 
 from rq import Queue
 import redis
@@ -271,6 +271,12 @@ def delete_video_job(
     )
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.video_url:
+        delete_file_from_gcs(job.video_url)
+    
+    if job.audio_url:
+        delete_file_from_gcs(job.audio_url)
 
     db.delete(job)
     db.commit()

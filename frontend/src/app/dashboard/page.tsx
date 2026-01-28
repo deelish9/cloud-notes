@@ -455,9 +455,9 @@ export default function DashboardPage() {
 
   function renderVideoStudio() {
     return (
-      <div style={{ display: "flex", gap: 32, marginTop: 24 }}>
+      <div className="dashboard-container">
         {/* LEFT PANEL: LIST & UPLOAD (35%) */}
-        <div style={{ flex: "0 0 350px", display: "flex", flexDirection: "column", gap: 24 }}>
+        <div className="dashboard-sidebar">
 
           {/* Upload Card */}
           <div style={cardStyle}>
@@ -563,7 +563,7 @@ export default function DashboardPage() {
         </div>
 
         {/* RIGHT PANEL: INSPECTOR (65%) */}
-        <div style={{ flex: 1, background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: 12, padding: 32, minHeight: 600 }}>
+        <div className="dashboard-main">
           {!selectedJobId ? (
             <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground)", opacity: 0.4, flexDirection: "column" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>👈</div>

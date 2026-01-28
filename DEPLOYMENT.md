@@ -1,113 +1,100 @@
-# ☁️ Cloud Notes Deployment Guide
+# Cloud Notes Deployment Guide
 
-This guide follows the "Serverless Sidecar" blueprint to deploy your application for ~$0 cost.
+This guide details how to verify and redeploy the Cloud Notes application.
 
-## 🗺️ Prerequisites
+## Prerequisites
+- Google Cloud SDK (`gcloud`) installed and authenticated.
+- Supabase account (Database).
+- Upstash account (Redis).
+- Clerk account (Auth).
+- Gemini API Key.
 
-1.  **Google Cloud SDK**: Ensure `gcloud` is installed and logged in.
-    ```bash
-    gcloud auth login
-    gcloud config set project [YOUR_PROJECT_ID]
-    ```
-2.  **Supabase**: Create a project and copy the Transaction Pooler Connection String (Port 6543) or Session Pooler (Port 5432).
-3.  **Upstash**: Create a Redis database and copy the `rediss://` URL.
+## 1. Backend (Google Cloud Run)
 
-## 🛠️ Step 1: Backend Deployment (Cloud Run)
+The backend consists of two services running from the same Docker image.
 
-### 1. Build the Container Image
-We will use a single image for both the API and the Worker.
+### Build Container Image
+First, build the image and push it to Google Container Registry (GCR).
 
 ```bash
 cd backend
-# Enable Cloud Build API if needed
-gcloud services enable cloudbuild.googleapis.com
-
-# Submit the build
-gcloud builds submit --tag gcr.io/$(gcloud config get-value project)/notes-app
+gcloud builds submit --tag gcr.io/cloud-notes-dlsa-01/notes-app
 ```
 
-### 2. Deploy the API Service
-Deploy the FastAPI backend.
+### Deploy API Service (`notes-api`)
+The API handles HTTP requests from the frontend.
 
 ```bash
 gcloud run deploy notes-api \
-  --image gcr.io/$(gcloud config get-value project)/notes-app \
+  --image gcr.io/cloud-notes-dlsa-01/notes-app \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
-  --memory 512Mi \
+  --memory 2Gi \
   --cpu 1 \
   --max-instances 5 \
-  --set-env-vars "DATABASE_URL=[YOUR_SUPABASE_URL]" \
-  --set-env-vars "REDIS_URL=[YOUR_UPSTASH_URL]" \
-  --set-env-vars "GEMINI_API_KEY=[YOUR_GEMINI_KEY]" \
-  --set-env-vars "GEMINI_MODEL=gemini-2.0-flash" \
-  --set-env-vars "GCS_BUCKET_NAME=[YOUR_BUCKET_NAME]" \
-  --set-env-vars "FRONTEND_ORIGIN=https://[YOUR_VERCEL_DOMAIN]"
-  # Note: You also need to Mount your GCS Key or pass it as a Base64 env var. 
-  # For simplicity, if you must use a file, you can mount it as a secret in Cloud Run UI later.
+  --set-env-vars "DATABASE_URL=postgresql://...,REDIS_URL=rediss://...,GEMINI_API_KEY=...,GEMINI_MODEL=gemini-2.0-flash,GCS_BUCKET_NAME=cloud-notes-videos,FRONTEND_ORIGIN=https://cloud-notes-alpha.vercel.app,CLERK_ISSUER=...,CLERK_JWKS_URL=..."
 ```
 
-### 3. Google Cloud Storage (GCS)
-We use a **Signed URL** flow to bypass the 32MB request limit of Cloud Run and Vercel.
-1.  Frontend requests a signed upload URL from Backend.
-2.  Backend generates a `PUT` URL (valid for 15 mins).
-3.  Frontend uploads the file directly to GCS.
-4.  Frontend notifies Backend to create the job.
+**Key Environment Variables:**
+- `DATABASE_URL`: Connection string from Supabase (Transaction Pooler).
+- `REDIS_URL`: Connection string from Upstash.
+- `GEMINI_API_KEY`: Google AI Studio Key.
+- `GCS_BUCKET_NAME`: Google Cloud Storage bucket name.
+- `FRONTEND_ORIGIN`: Your Vercel app URL (for CORS).
 
-**CORS Configuration** (Applied automatically):
-```json
-[
-    {
-      "origin": ["*"],
-      "method": ["GET", "PUT", "OPTIONS"],
-      "responseHeader": ["Content-Type", "x-goog-resumable"],
-      "maxAgeSeconds": 3600
-    }
-]
-```
+### Deploy Worker Service (`notes-worker`)
+The Worker processes video files in the background (Audio Extraction -> Transcription -> Summarization).
 
-### 4. Deploy the Worker Service
-Deploy the RQ Worker (Sidecar). This needs a different entrypoint.
+**Critical Configuration:**
+- **No CPU Throttling**: Ensures CPU is available even when not processing HTTP requests.
+- **Timeout**: Set to **3600s (1 hour)** to allow processing of large videos.
+- **Instances**: `min-instances=1` to ensure at least one worker is always ready (optional, but good for latency), `max-instances=1` to process serially.
 
 ```bash
 gcloud run deploy notes-worker \
-  --image gcr.io/$(gcloud config get-value project)/notes-app \
+  --image gcr.io/cloud-notes-dlsa-01/notes-app \
   --platform managed \
   --region us-central1 \
   --no-allow-unauthenticated \
-  --memory 1Gi \
-  --cpu 1 \
+  --memory 4Gi \
+  --cpu 2 \
+  --no-cpu-throttling \
   --min-instances 1 \
   --max-instances 1 \
-  --timeout 300s \
-  --command "python" \
-  --args "-m,app.worker" \
-  --set-env-vars "DATABASE_URL=[YOUR_SUPABASE_URL]" \
-  --set-env-vars "REDIS_URL=[YOUR_UPSTASH_URL]" \
-  --set-env-vars "GEMINI_API_KEY=[YOUR_GEMINI_KEY]" \
-  --set-env-vars "GEMINI_MODEL=gemini-2.0-flash" \
-  --set-env-vars "GCS_BUCKET_NAME=[YOUR_BUCKET_NAME]" \
-  --set-env-vars "OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES"
+  --timeout 3600s \
+  --command python \
+  --args="-m,app.worker" \
+  --set-env-vars "DATABASE_URL=postgresql://...,REDIS_URL=rediss://...,GEMINI_API_KEY=...,GEMINI_MODEL=gemini-2.0-flash,GCS_BUCKET_NAME=cloud-notes-videos,OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES,CLERK_ISSUER=...,CLERK_JWKS_URL=..."
 ```
-> **Note**: `min-instances 1` keeps the worker alive to listen to Redis. This may cost a small amount (estimated <$5/mo).
 
-## 🚀 Step 2: Frontend Deployment (Vercel)
+## 2. Frontend (Vercel)
 
-1.  **Push your code** to GitHub.
-2.  Import the `frontend` folder into Vercel.
-3.  **Environment Variables**:
-    *   `NEXT_PUBLIC_API_URL`: Set this to `/api` (This triggers the rewrite rule in `vercel.json`).
-    *   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: From your Clerk dashboard.
-4. **Deploy**!
+The frontend is deployed on Vercel.
 
-## 🔗 Step 3: Final Wiring
+### Vercel Configuration (`vercel.json`)
+The `vercel.json` file handles routing API requests to the Cloud Run backend.
 
-1.  Copy your Vercel Domain (e.g., `https://cloud-notes.vercel.app`).
-2.  Update the `notes-api` Cloud Run service environment variable `FRONTEND_ORIGIN` to match this domain (to fix CORS).
-3.  Update your Clerk "Allowed Origins" to include your Vercel domain.
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://notes-api-30096187962.us-central1.run.app/:path*"
+    }
+  ]
+}
+```
 
-## ✅ Verification
-1.  Open your Vercel app.
-2.  Upload a video.
-3.  Check the "Recent Jobs" list. It should go from `queued` -> `processing` -> `ready`.
+### Environment Variables (Vercel)
+Set these in the Vercel Project Settings:
+- `NEXT_PUBLIC_API_URL`: `https://cloud-notes-alpha.vercel.app/api` (Points to itself, rewritten to Cloud Run)
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: From Clerk Dashboard.
+
+## 3. Verification
+
+1.  **Check API Health**: Visit `https://notes-api-30096187962.us-central1.run.app/` (Should show 404 or docs if configured).
+2.  **Check Worker Logs**:
+    ```bash
+    gcloud beta run services logs read notes-worker --region us-central1
+    ```
