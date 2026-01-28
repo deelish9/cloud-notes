@@ -10,8 +10,12 @@ from app.core.config import settings
 
 
 
-# 2. Initialize client once
-client = storage.Client.from_service_account_json(settings.GCS_KEY_PATH)
+# 2. Initialize client
+if settings.GCS_KEY_PATH and os.path.exists(settings.GCS_KEY_PATH):
+    client = storage.Client.from_service_account_json(settings.GCS_KEY_PATH)
+else:
+    # Fallback to default credentials (Cloud Run, etc.)
+    client = storage.Client()
 
 def upload_video_to_gcs(file) -> str:
     """
