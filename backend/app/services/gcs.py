@@ -46,19 +46,88 @@ def upload_video_to_gcs(file) -> str:
     # or return blob_name if your DB stores the path
     return blob_name 
 
+from google.cloud import iam_credentials_v1
+import google.auth
+import time
+
+def get_service_account_email():
+    """
+    Helper to get the current service account email from default credentials.
+    """
+    try:
+        credentials, _ = google.auth.default()
+        if hasattr(credentials, "service_account_email"):
+            return credentials.service_account_email
+        # If running locally with gcloud auth application-default login, likely user email or None
+        # But in Cloud Run, it should be the service account email.
+        # Fallback: make a lighter call or assume from env?
+        # Actually Google Auth libraries often lazy load.
+        # Let's try to refresh to ensure email is present
+        from google.auth.transport.requests import Request
+        credentials.refresh(Request())
+        return credentials.service_account_email
+    except Exception as e:
+        print(f"Warning: Could not determine service account email: {e}")
+        return None
+
 def generate_signed_url(object_name: str, minutes: int = 60) -> str:
     """
     Generates a temporary signed URL for viewing the video.
+    Falls back to IAM signing if local key is missing.
     """
     bucket = client.bucket(settings.GCS_BUCKET_NAME)
     blob = bucket.blob(object_name)
 
+    try:
+        # Try standard signing (works locally with key file)
+        return blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(minutes=minutes),
+            method="GET",
+        )
+    except Exception:
+        # If it fails (likely due to missing private key in Cloud Run ADC),
+        # use the IAM API method.
+        # Note: This requires the Service Account to have "Service Account Token Creator" role on itself.
+        
+        sa_email = get_service_account_email()
+        if not sa_email:
+             raise ValueError("Cannot sign URL: No private key and cannot determine Service Account Email.")
 
-    return blob.generate_signed_url(
-        version="v4",
-        expiration=timedelta(minutes=minutes),
-        method="GET",
-    )
+        # Explicitly use the IAM credentials logic (mimicking client behavior)
+        # However, generate_signed_url allows passing 'service_account_email' and 'access_token'
+        # But for V4 signing without a key, we need to sign the bytes via IAM API.
+        
+        # Proper way: Use the `virtual` signing capability of storage client is NOT simple in python lib yet.
+        # We will use the 'bucket.generate_signed_url' with 'service_account_email' 
+        # combined with a custom access token? No, that's V2.
+        
+        # Use the explicit manual signing approach with IAM:
+        # 1. Provide the Service Account Email
+        # 2. Provide the Access Token (for the IAM API call itself)
+        
+        # Actually, the Python Storage library allows us to pass a 'credentials' object
+        # that implements 'sign_bytes'. We can wrap the IAM client.
+        # OR simpler: use blob.generate_signed_url with `service_account_email` 
+        # AND `access_token` - valid for simple cases, but specific to V2?
+        
+        # Let's use the robust manual IAM SignBlob approach documentation:
+        # https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials#sa-credentials-python
+        
+        # Simplified: Use the 'service_account_email' param which triggers the remote signing?
+        # It does ONLY if you provide 'access_token' as well.
+        
+        credentials, _ = google.auth.default()
+        from google.auth.transport.requests import Request
+        credentials.refresh(Request())
+        
+        return blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(minutes=minutes),
+            method="GET",
+            service_account_email=sa_email,
+            access_token=credentials.token, 
+        )
 
 def generate_upload_signed_url(content_type: str, minutes: int = 15) -> dict:
     """
@@ -74,13 +143,37 @@ def generate_upload_signed_url(content_type: str, minutes: int = 15) -> dict:
     blob_name = f"videos/{uuid.uuid4()}.{ext}"
     blob = bucket.blob(blob_name)
 
-    url = blob.generate_signed_url(
-        version="v4",
-        expiration=timedelta(minutes=minutes),
-        method="PUT",
-        content_type=content_type,
-    )
-    
+    try:
+        url = blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(minutes=minutes),
+            method="PUT",
+            content_type=content_type,
+        )
+    except Exception:
+        # Fallback to IAM signing
+        try:
+            sa_email = get_service_account_email()
+            if not sa_email:
+                raise ValueError("No Service Account Email found for IAM signing")
+                
+            credentials, _ = google.auth.default()
+            from google.auth.transport.requests import Request
+            if not credentials.token:
+                credentials.refresh(Request())
+            
+            url = blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(minutes=minutes),
+                method="PUT",
+                content_type=content_type,
+                service_account_email=sa_email,
+                access_token=credentials.token,
+            )
+        except Exception as e:
+            print(f"IAM Signing failed: {e}")
+            raise ValueError(f"Failed to generate signed URL via IAM: {e}")
+
     return {"url": url, "blob_name": blob_name}
 
 def download_video_from_gcs(blob_name: str) -> str:

@@ -19,6 +19,7 @@ google-genai
 redis
 rq
 google-cloud-storage
+google-cloud-iam
 openai-whisper
 moviepy
 torch
