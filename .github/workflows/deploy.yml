@@ -47,7 +47,8 @@ jobs:
             --allow-unauthenticated \
             --memory 2Gi \
             --cpu 1 \
-            --max-instances 5
+            --max-instances 5 \
+            --service-account github-actions-deployer@cloud-notes-dlsa-01.iam.gserviceaccount.com
 
       - name: Deploy Worker Service
         run: |
@@ -63,4 +64,5 @@ jobs:
             --max-instances 1 \
             --timeout 3600s \
             --command python \
-            --args="-m,app.worker"
+            --args="-m,app.worker" \
+            --service-account github-actions-deployer@cloud-notes-dlsa-01.iam.gserviceaccount.com
