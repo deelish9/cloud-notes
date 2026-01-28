@@ -52,23 +52,30 @@ import time
 
 def get_service_account_email():
     """
-    Helper to get the current service account email from default credentials.
+    Helper to get the current service account email.
+    In Cloud Run, we should query the metadata server directly if credentials don't have it.
     """
     try:
+        # 1. Try Credentials first
         credentials, _ = google.auth.default()
-        if hasattr(credentials, "service_account_email"):
+        if hasattr(credentials, "service_account_email") and credentials.service_account_email and credentials.service_account_email != "default":
             return credentials.service_account_email
-        # If running locally with gcloud auth application-default login, likely user email or None
-        # But in Cloud Run, it should be the service account email.
-        # Fallback: make a lighter call or assume from env?
-        # Actually Google Auth libraries often lazy load.
-        # Let's try to refresh to ensure email is present
-        from google.auth.transport.requests import Request
-        credentials.refresh(Request())
-        return credentials.service_account_email
+        
+        # 2. Try Metadata Server (Reliable in Cloud Run)
+        import requests
+        headers = {"Metadata-Flavor": "Google"}
+        response = requests.get(
+            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email",
+            headers=headers,
+            timeout=2
+        )
+        if response.status_code == 200:
+            return response.text.strip()
+            
     except Exception as e:
         print(f"Warning: Could not determine service account email: {e}")
-        return None
+        
+    return None
 
 def generate_signed_url(object_name: str, minutes: int = 60) -> str:
     """
