@@ -500,9 +500,18 @@ export default function DashboardPage() {
                   </button>
                 )}
                 {videoFile && (
-                  <button style={btnStyle} onClick={uploadVideo}>
-                    Termi-Upload
-                  </button>
+                  <>
+                    <button style={{ ...btnStyleSecondary, color: "#ef4444", borderColor: "#ef4444" }} onClick={() => {
+                      setVideoFile(null);
+                      setVideoStatus("");
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}>
+                      Remove
+                    </button>
+                    <button style={btnStyle} onClick={uploadVideo}>
+                      Termi-Upload
+                    </button>
+                  </>
                 )}
               </div>
             </div>
