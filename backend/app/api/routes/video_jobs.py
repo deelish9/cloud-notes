@@ -63,7 +63,12 @@ def get_upload_url(
     """
     Step 1: Get a signed URL to upload the video directly to GCS.
     """
-    return generate_upload_signed_url(payload.content_type)
+    try:
+        return generate_upload_signed_url(payload.content_type)
+    except Exception as e:
+        print(f"Error generating signed URL: {e}")
+        # Return specific error so client can show it (instead of generic "Internal Server Error")
+        raise HTTPException(status_code=500, detail=f"Signed URL Error: {str(e)}")
 
 
 @router.post("")
