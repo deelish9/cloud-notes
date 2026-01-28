@@ -1,5 +1,7 @@
 # Cloud Notes - AI-Powered Video Intelligence ☁️📝
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://cloud-notes-alpha.vercel.app)
+
 **Cloud Notes** is a state-of-the-art SaaS platform that transforms raw video footage into structured, searchable, and actionable notes. Leveraging multimodal AI (Google Gemini 2.0), it handles the heavy lifting of audio extraction, transcription, and intelligent summarization, giving users a "second brain" for their video content.
 
 ## CloudNotes in Action 🚀
@@ -25,8 +27,8 @@ Cloud Notes provides a unified **Video Studio** and **Notebook** interface. Uplo
 ## 🏗️ Architecture Overview
 
 ### 🔧 Core Components
-*   **Frontend**: Next.js 15 (App Router) with React 18 & Clerk Auth.
-*   **Backend**: FastAPI (Python 3.11) with async job queues.
+*   **Frontend**: Next.js 15 (App Router) with React 18 & Clerk Auth (Deployed on **Vercel**).
+*   **Backend**: FastAPI (Python 3.11) with async job queues (Deployed on **Google Cloud Run**).
 *   **AI Engine**: Google Gemini 2.0 Flash/Pro (Multimodal).
 *   **Processing**: RQ (Redis Queue) + FFmpeg for media pipelines.
 *   **Storage**: Google Cloud Storage (GCS) for media assets.
@@ -84,6 +86,16 @@ cloud-notes/
 │   └── public/
 └── docker-compose.yml       # Local development orchestration
 ```
+
+## 🌍 Deployment
+
+The application is deployed securely using a modern serverless architecture:
+
+*   **Frontend**: Hosted on [Vercel](https://cloud-notes-alpha.vercel.app), utilizing Edge CDN and instant rollbacks.
+*   **Backend**: Hosted on **Google Cloud Run** as distinct services (`notes-api` and `notes-worker`) for infinite scaling.
+*   **CI/CD**: Automated GitHub Actions pipeline builds and deploys containers on every push to `main`.
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## 🚀 Getting Started
 
