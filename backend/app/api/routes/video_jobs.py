@@ -92,7 +92,7 @@ def create_video_job_from_blob(
     db.refresh(job)
 
     # Queue the job
-    queue.enqueue(generate_video_summary, job.id, job_timeout='600s')
+    queue.enqueue(generate_video_summary, job.id, job_timeout='3600s')
 
     return job
 
@@ -125,7 +125,7 @@ def upload_video_job(
 
     # Automatically queue the video processing job
     # Use string path for RQ to import in worker context
-    queue.enqueue(generate_video_summary, job.id, job_timeout='600s')
+    queue.enqueue(generate_video_summary, job.id, job_timeout='3600s')
 
 
     return job

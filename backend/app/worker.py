@@ -30,6 +30,6 @@ if __name__ == "__main__":
     t.start()
     print("Health check server started.")
 
-    queue = Queue("video-jobs", connection=conn, default_timeout=600)
-    worker = Worker([queue], connection=conn, default_worker_ttl=600, job_monitoring_interval=5)
+    queue = Queue("video-jobs", connection=conn, default_timeout=3600)
+    worker = Worker([queue], connection=conn, default_worker_ttl=3600, job_monitoring_interval=5)
     worker.work()
