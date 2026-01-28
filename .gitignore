@@ -51,3 +51,6 @@ logs/
 
 # Secrets
 gcs-key.json
+
+# Temp
+gcloud_temp/
