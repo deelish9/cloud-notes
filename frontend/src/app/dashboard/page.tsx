@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"video" | "notes">("video");
   const [searchQuery, setSearchQuery] = useState("");
   const [showVideo, setShowVideo] = useState(false);
+  const [stableSignedUrl, setStableSignedUrl] = useState<string | null>(null);
 
   // -------------------------
   // NOTES
@@ -469,6 +470,25 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Update stableSignedUrl only when selectedJobId changes or a new URL becomes available for the current job.
+  // This prevents the video player from restarting every 5s due to polling.
+  useEffect(() => {
+    const currentJob = jobs.find(j => j.id === selectedJobId);
+    const newUrl = currentJob?.signed_url || null;
+
+    if (!selectedJobId) {
+      setStableSignedUrl(null);
+      return;
+    }
+
+    // Only update if the URL was null (first time arrival) or if the job ID itself is different.
+    // If the URL exists and we are just getting a "fresher" signed URL for the SAME job,
+    // we keep the OLD one in the player to avoid a reload.
+    if (newUrl && (!stableSignedUrl || jobs.find(j => j.signed_url === stableSignedUrl)?.id !== selectedJobId)) {
+      setStableSignedUrl(newUrl);
+    }
+  }, [selectedJobId, jobs, stableSignedUrl]);
+
   function renderVideoStudio() {
     return (
       <div className="dashboard-container">
@@ -621,7 +641,7 @@ export default function DashboardPage() {
                         controls
                         autoPlay
                         style={{ width: "100%", display: "block", maxHeight: 400 }}
-                        src={jobs.find(j => j.id === selectedJobId)?.signed_url || ""}
+                        src={stableSignedUrl || ""}
                       />
                     </div>
                   )}
