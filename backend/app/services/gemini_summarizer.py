@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import Optional
 from app.core.config import settings
+from tenacity import retry, stop_after_attempt, wait_exponential
 
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=4, max=60),
+    reraise=True
+)
 def summarize_transcript(transcript: str, gemini_file=None) -> str:
     """
     Returns a real summary (not just reformatting).

@@ -1,7 +1,13 @@
 import os
 import time
 from app.core.config import settings
+from tenacity import retry, stop_after_attempt, wait_exponential
 
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=4, max=60),
+    reraise=True
+)
 def upload_file_to_gemini(local_path: str, mime_type: str = "video/mp4"):
     """
     Uploads a file to the Gemini File API for temporary storage/processing.

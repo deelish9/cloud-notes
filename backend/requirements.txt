@@ -23,3 +23,4 @@ google-cloud-iam
 openai-whisper
 moviepy
 torch
+tenacity

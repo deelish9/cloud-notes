@@ -90,6 +90,7 @@ def create_video_job_from_blob(
         filename=payload.filename,
         video_url=payload.blob_name,
         status="queued",
+        error=None,
     )
 
     db.add(job)
@@ -122,6 +123,7 @@ def upload_video_job(
         filename=file.filename,
         video_url=video_url,
         status="queued",
+        error=None,
     )
 
     db.add(job)
@@ -220,6 +222,7 @@ def generate_summary(
 
     # Allow re-processing even if transcript exists
     job.status = "queued"
+    job.error = None
     db.commit()
 
     queue.enqueue(generate_video_summary, job.id)
