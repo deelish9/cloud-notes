@@ -6,8 +6,8 @@ def extract_audio(video_path: str) -> str:
     """
     Extracts audio from video and returns path to .wav file
     """
-    tmp_dir = tempfile.mkdtemp()
-    audio_path = os.path.join(tmp_dir, "audio.wav")
+    fd, audio_path = tempfile.mkstemp(suffix=".wav")
+    os.close(fd)
 
     cmd = [
         "ffmpeg",

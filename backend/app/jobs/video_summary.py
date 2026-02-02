@@ -8,82 +8,89 @@ from app.services.gemini_files import upload_file_to_gemini, delete_file_from_ge
 import os
 
 
+import logging
+logger = logging.getLogger(__name__)
+
 def generate_video_summary(job_id: str):
+    logger.info(f"Starting job {job_id}")
     db = SessionLocal()
-    job = db.query(VideoJob).get(job_id)
-
-    if not job:
-        return
-
-    video_path = None
-    gemini_file = None
-
     try:
-        # If we don't have a transcript yet, we MUST do the heavy lifting
-        if not job.transcript:
-            job.status = "processing"
-            db.commit()
+        job = db.query(VideoJob).get(job_id)
 
-            # 1️⃣ Download video
-            video_path = download_video_from_gcs(job.video_url)
+        if not job:
+            logger.warning(f"Job {job_id} not found in database")
+            return
 
-            # 2️⃣ Extract audio
-            audio_path = extract_audio(video_path)
+        logger.info(f"Processing job {job_id} for file {job.filename}")
 
-            # 3️⃣ Upload audio
-            audio_url = upload_audio_to_gcs(audio_path)
+        video_path = None
+        gemini_file = None
+        audio_path = None
 
-            job.audio_url = audio_url
-            job.status = "audio_extracted"
-            db.commit()
+        try:
+            # 1️⃣ Transcribe if needed
+            if not job.transcript:
+                job.status = "processing"
+                db.commit()
 
-            # 4️⃣ Transcribe audio
-            job.status = "transcribing"
-            db.commit()
+                video_path = download_video_from_gcs(job.video_url)
+                audio_path = extract_audio(video_path)
+                audio_url = upload_audio_to_gcs(audio_path)
 
-            transcript = transcribe_audio(audio_path)
+                job.audio_url = audio_url
+                job.status = "transcribing"
+                db.commit()
+
+                job.transcript = transcribe_audio(audio_path)
+                job.status = "transcribed"
+                db.commit()
             
-            job.transcript = transcript
-            job.status = "transcribed"
-            db.commit()
-        
-        # 5️⃣ Generate Summary (Always do this if we have a transcript)
-        if job.transcript:
+            # 2️⃣ Generate Summary
             job.status = "summarizing"
             db.commit()
 
-            # Ensure we have the video locally for visual analysis
             if not video_path:
-                # If we skipped transcription, we need to download the video now
                 video_path = download_video_from_gcs(job.video_url)
 
-            # Upload video to Gemini for multimodal analysis
             try:
                 gemini_file = upload_file_to_gemini(video_path)
             except Exception as e:
-                # logging.warning(f"Failed to upload video to Gemini: {e}")
+                logger.warning(f"Failed to upload video to Gemini: {e}")
                 gemini_file = None
 
-            summary = summarize_transcript(job.transcript, gemini_file)
-            
-            job.summary = summary
+            job.summary = summarize_transcript(job.transcript, gemini_file)
             job.status = "done"
             db.commit()
 
-    except Exception as e:
-        job.status = "failed"
-        job.error = str(e)
-        db.commit()
-        raise
-    
-    finally:
-        # Cleanup Gemini file
-        if gemini_file:
-            delete_file_from_gemini(gemini_file.name)
+        except Exception as e:
+            logger.error(f"Error in job {job_id}: {e}")
+            job.status = "failed"
+            job.error = str(e)
+            db.commit()
+            raise
         
-        # Cleanup local video file if it exists
-        if video_path and os.path.exists(video_path):
-            try:
-                os.remove(video_path)
-            except:
-                pass   
+        finally:
+            # Cleanup Gemini file
+            if gemini_file:
+                delete_file_from_gemini(gemini_file.name)
+            
+            # Cleanup local video file if it exists
+            if video_path and os.path.exists(video_path):
+                try:
+                    os.remove(video_path)
+                except:
+                    pass
+            
+            # Cleanup extracted audio if it exists
+            if audio_path and os.path.exists(audio_path):
+                try:
+                    # Check if it's a file or directory (based on how extract_audio works)
+                    if os.path.isdir(audio_path):
+                        import shutil
+                        shutil.rmtree(audio_path)
+                    else:
+                        os.remove(audio_path)
+                except:
+                    pass
+    finally:
+        db.close()

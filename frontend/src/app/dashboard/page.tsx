@@ -15,6 +15,7 @@ type VideoJob = {
   id: string;
   filename: string;
   status: string;
+  video_url?: string | null; // The underlying blob name
   transcript?: string | null;
   summary?: string | null;
   signed_url?: string | null;
@@ -233,8 +234,23 @@ export default function DashboardPage() {
         return;
       }
 
-      const data = await res.json();
-      setJobs(data);
+      const data: VideoJob[] = await res.json();
+
+      setJobs((prevJobs) => {
+        return data.map((newJob) => {
+          const oldJob = prevJobs.find((pj) => pj.id === newJob.id);
+
+          // If we have an old version of this job and the base video_url (blob) is the same,
+          // preserve the old signed_url to avoid triggering a re-render/re-load of the video player.
+          if (oldJob && oldJob.video_url === newJob.video_url && oldJob.signed_url) {
+            return {
+              ...newJob,
+              signed_url: oldJob.signed_url
+            };
+          }
+          return newJob;
+        });
+      });
       if (!isBackground) setVideoStatus("");
     } catch (e: any) {
       setVideoStatus(`Error loading jobs: ${e?.message || String(e)}`);

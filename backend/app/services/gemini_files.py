@@ -22,7 +22,9 @@ def upload_file_to_gemini(local_path: str, mime_type: str = "video/mp4"):
     )
     
     # Wait for processing (videos need to be processed)
-    while True:
+    max_retries = 60 # 2 minutes total
+    retries = 0
+    while retries < max_retries:
         file_ref = client.files.get(name=file_ref.name)
         if file_ref.state.name == "ACTIVE":
             break
@@ -32,6 +34,10 @@ def upload_file_to_gemini(local_path: str, mime_type: str = "video/mp4"):
         # logging.info(f"Waiting for video processing... {file_ref.state.name}")
 
         time.sleep(2)
+        retries += 1
+    
+    if retries >= max_retries:
+        raise RuntimeError("Timeout waiting for Gemini file processing.")
         
     return file_ref
 
