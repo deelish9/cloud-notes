@@ -32,6 +32,20 @@ body {
   /* Font is handled by Next.js Inter class */
 }
 
+mark {
+  background: rgba(59, 130, 246, 0.3);
+  /* Blue-500 with opacity */
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  mark {
+    background: rgba(59, 130, 246, 0.5);
+  }
+}
+
 /* Utilities for hover effects that are hard to do inline */
 .card-interactive {
   transition: all 0.2s ease;

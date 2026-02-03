@@ -38,10 +38,37 @@ function getJobProgress(status: string): number {
   }
 }
 
-function MarkdownViewer({ content }: { content: string }) {
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query || !query.trim()) return <>{text}</>;
+
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark key={i}>{part}</mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
+function MarkdownViewer({ content, searchQuery = "" }: { content: string; searchQuery?: string }) {
+  const components = {
+    text: ({ node, children, ...props }: any) => {
+      // Highlighting in text nodes
+      if (typeof children === "string" && searchQuery) {
+        return <HighlightText text={children} query={searchQuery} />;
+      }
+      return children;
+    },
+  };
+
   return (
     <div className="markdown-content">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>
     </div>
@@ -687,7 +714,7 @@ export default function DashboardPage() {
                 {jobs.find(j => j.id === selectedJobId)?.summary ? (
                   <div style={{ background: "var(--card-bg)", padding: 20, borderRadius: 12, border: "1px solid var(--card-border)", color: "var(--foreground)" }}>
                     <div style={{ maxHeight: "400px", overflowY: "auto", marginBottom: 20 }}>
-                      <MarkdownViewer content={jobs.find(j => j.id === selectedJobId)?.summary || ""} />
+                      <MarkdownViewer content={jobs.find(j => j.id === selectedJobId)?.summary || ""} searchQuery={searchQuery} />
                     </div>
                     <div style={{ paddingTop: 16, borderTop: "1px solid var(--card-border)" }}>
                       <button onClick={() => saveJobAsNote(selectedJobId)} style={{ ...btnStyleSecondary, width: "100%" }} className="btn-interactive">Save to Notebook</button>
@@ -746,8 +773,10 @@ export default function DashboardPage() {
             n.content.toLowerCase().includes(searchQuery.toLowerCase())
           ).map((n) => (
             <div key={n.id} style={{ ...cardStyle, display: "flex", flexDirection: "column", height: 280 }} className="card-interactive">
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-                <h3 style={{ fontWeight: 700, fontSize: 16 }}>{n.title}</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, alignItems: "flex-start" }}>
+                <h3 style={{ fontWeight: 700, fontSize: 16, flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <HighlightText text={n.title} query={searchQuery} />
+                </h3>
                 <div style={{ display: "flex", gap: 8 }}>
                   {/* Maximize / Edit Button */}
                   <button
@@ -762,7 +791,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div style={{ flex: 1, overflowY: "auto", fontSize: 14, color: "var(--foreground)", background: "var(--background)", padding: 12, borderRadius: 8, border: "1px solid var(--card-border)" }}>
-                <MarkdownViewer content={n.content} />
+                <MarkdownViewer content={n.content} searchQuery={searchQuery} />
               </div>
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--card-border)", fontSize: 12, color: "var(--foreground)", opacity: 0.5 }}>
                 {new Date(n.created_at).toLocaleDateString()}
