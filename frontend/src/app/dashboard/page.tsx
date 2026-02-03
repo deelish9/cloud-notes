@@ -2,6 +2,8 @@
 
 import { useAuth, SignedIn, SignedOut, SignInButton, SignOutButton, UserButton } from "@clerk/nextjs";
 import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Note = {
   id: string;
@@ -34,6 +36,16 @@ function getJobProgress(status: string): number {
     case "failed": return 100; // Full bar but red
     default: return 0;
   }
+}
+
+function MarkdownViewer({ content }: { content: string }) {
+  return (
+    <div className="markdown-content">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -673,9 +685,9 @@ export default function DashboardPage() {
                 </div>
 
                 {jobs.find(j => j.id === selectedJobId)?.summary ? (
-                  <div style={{ background: "var(--background)", padding: 24, borderRadius: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", border: "1px solid var(--card-border)" }}>
-                    {jobs.find(j => j.id === selectedJobId)?.summary}
-                    <div style={{ marginTop: 16 }}>
+                  <div style={{ background: "#fff", padding: 24, borderRadius: 12, border: "1px solid var(--card-border)", color: "#18181b" }}>
+                    <MarkdownViewer content={jobs.find(j => j.id === selectedJobId)?.summary || ""} />
+                    <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid #eee" }}>
                       <button onClick={() => saveJobAsNote(selectedJobId)} style={btnStyleSecondary} className="btn-interactive">Save to Notebook</button>
                     </div>
                   </div>
@@ -747,8 +759,8 @@ export default function DashboardPage() {
                   <button onClick={() => deleteNote(n.id)} style={{ ...deleteBtnStyle, background: "transparent" }} className="btn-interactive">×</button>
                 </div>
               </div>
-              <div style={{ flex: 1, overflowY: "auto", fontSize: 14, color: "var(--foreground)", opacity: 0.8, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
-                {n.content}
+              <div style={{ flex: 1, overflowY: "auto", fontSize: 14, color: "#18181b", background: "#fff", padding: 12, borderRadius: 8, border: "1px solid #eee" }}>
+                <MarkdownViewer content={n.content} />
               </div>
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--card-border)", fontSize: 12, color: "var(--foreground)", opacity: 0.5 }}>
                 {new Date(n.created_at).toLocaleDateString()}

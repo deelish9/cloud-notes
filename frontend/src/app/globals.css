@@ -81,13 +81,64 @@ body {
   .dashboard-container {
     flex-direction: column;
   }
-  
+
   .dashboard-sidebar {
     flex: none;
     width: 100%;
   }
-  
+
   .dashboard-main {
     min-height: auto;
   }
+}
+
+/* Markdown Rendering Styles */
+.markdown-content {
+  line-height: 1.6;
+  color: #18181b;
+  font-size: 15px;
+}
+
+.markdown-content p {
+  margin-bottom: 16px;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: 800;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.markdown-content strong {
+  font-weight: 700;
+  color: #000;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-bottom: 16px;
+  padding-left: 20px;
+}
+
+.markdown-content li {
+  margin-bottom: 11px;
+  position: relative;
+}
+
+.markdown-content ul li::marker {
+  color: #71717a;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--card-border);
+  padding-left: 16px;
+  font-style: italic;
+  color: #71717a;
+  margin-bottom: 16px;
 }
