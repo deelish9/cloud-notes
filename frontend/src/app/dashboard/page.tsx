@@ -541,23 +541,23 @@ export default function DashboardPage() {
                 <div style={{ fontSize: 14, color: "var(--foreground)", opacity: 0.7 }}>Drag & drop or click to upload</div>
               )}
 
-              <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
+              <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                 {!videoFile && (
-                  <button style={btnStyleSecondary} onClick={() => fileInputRef.current?.click()}>
+                  <button style={{ ...btnStyleSecondary, flex: "1 1 auto" }} onClick={() => fileInputRef.current?.click()}>
                     Pick Video
                   </button>
                 )}
                 {videoFile && (
                   <>
-                    <button style={{ ...btnStyleSecondary, color: "#ef4444", borderColor: "#ef4444" }} onClick={() => {
+                    <button style={{ ...btnStyleSecondary, color: "#ef4444", borderColor: "#ef4444", flex: "1 1 auto" }} onClick={() => {
                       setVideoFile(null);
                       setVideoStatus("");
                       if (fileInputRef.current) fileInputRef.current.value = "";
                     }}>
                       Remove
                     </button>
-                    <button style={btnStyle} onClick={uploadVideo}>
-                      Termi-Upload
+                    <button style={{ ...btnStyle, flex: "1 1 auto" }} onClick={uploadVideo}>
+                      Upload to Studio
                     </button>
                   </>
                 )}
@@ -641,10 +641,10 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
                 <h2 style={{ fontSize: 22, fontWeight: 700 }}>Workspace</h2>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={deleteJob.bind(null, selectedJobId)} style={deleteBtnStyle} className="btn-interactive">Delete Job</button>
+                  <button onClick={() => deleteJob(selectedJobId)} style={deleteBtnStyle} className="btn-interactive">Delete Job</button>
                 </div>
               </div>
 
@@ -685,10 +685,12 @@ export default function DashboardPage() {
                 </div>
 
                 {jobs.find(j => j.id === selectedJobId)?.summary ? (
-                  <div style={{ background: "var(--card-bg)", padding: 24, borderRadius: 12, border: "1px solid var(--card-border)", color: "var(--foreground)" }}>
-                    <MarkdownViewer content={jobs.find(j => j.id === selectedJobId)?.summary || ""} />
-                    <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--card-border)" }}>
-                      <button onClick={() => saveJobAsNote(selectedJobId)} style={btnStyleSecondary} className="btn-interactive">Save to Notebook</button>
+                  <div style={{ background: "var(--card-bg)", padding: 20, borderRadius: 12, border: "1px solid var(--card-border)", color: "var(--foreground)" }}>
+                    <div style={{ maxHeight: "400px", overflowY: "auto", marginBottom: 20 }}>
+                      <MarkdownViewer content={jobs.find(j => j.id === selectedJobId)?.summary || ""} />
+                    </div>
+                    <div style={{ paddingTop: 16, borderTop: "1px solid var(--card-border)" }}>
+                      <button onClick={() => saveJobAsNote(selectedJobId)} style={{ ...btnStyleSecondary, width: "100%" }} className="btn-interactive">Save to Notebook</button>
                     </div>
                   </div>
                 ) : (
@@ -709,20 +711,20 @@ export default function DashboardPage() {
       <div style={{ marginTop: 24 }}>
         {/* Create Note Bar - Always for Creation now */}
         <div style={{ background: "var(--card-bg)", padding: 20, borderRadius: 12, border: "1px solid var(--card-border)", marginBottom: 24, boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
-          <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Note Title..."
-              style={{ ...inputStyle, width: 300, fontWeight: 600 }}
+              style={{ ...inputStyle, flex: "1 1 200px", fontWeight: 600 }}
             />
             <input
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Take a quick note..."
-              style={{ ...inputStyle, flex: 1 }}
+              style={{ ...inputStyle, flex: "2 1 300px" }}
             />
-            <button onClick={createNote} style={btnStyle} className="btn-interactive">Add Note</button>
+            <button onClick={createNote} style={{ ...btnStyle, flex: "1 1 auto" }} className="btn-interactive">Add Note</button>
           </div>
           {noteStatus && <p style={{ marginTop: 8, fontSize: 13, color: "var(--foreground)", opacity: 0.7 }}>{noteStatus}</p>}
         </div>
@@ -738,7 +740,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {notes.filter(n =>
             n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             n.content.toLowerCase().includes(searchQuery.toLowerCase())
@@ -772,30 +774,8 @@ export default function DashboardPage() {
 
         {/* Full Screen Editor Modal */}
         {editingNote && (
-          <div style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            backdropFilter: "blur(4px)"
-          }}>
-            <div style={{
-              background: "var(--card-bg)",
-              width: "80%",
-              height: "80%",
-              borderRadius: 16,
-              padding: 40,
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-              border: "1px solid var(--card-border)"
-            }}>
+          <div className="modal-overlay">
+            <div className="modal-content">
               {/* Modal Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <input
@@ -848,32 +828,48 @@ export default function DashboardPage() {
   }
 
   return (
-    <main style={{ padding: 24, paddingBottom: 100, maxWidth: 1200, margin: "0 auto", fontFamily: "var(--font-sans)" }}>
+    <main className="container-padding" style={{ padding: 24, paddingBottom: 100, maxWidth: 1200, margin: "0 auto", fontFamily: "var(--font-sans)" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px" }}>Cloud Notes</h1>
-          <p style={{ marginTop: 4, color: "var(--foreground)", opacity: 0.6 }}>AI-Powered Video Summarizer</p>
-        </div>
-        <SignedIn>
-          <div style={{ display: "flex", gap: 8, background: "var(--card-bg)", border: "1px solid var(--card-border)", padding: 4, borderRadius: 12 }}>
-            <button
-              onClick={() => setActiveTab("video")}
-              style={activeTab === "video" ? activeTabStyle : inactiveTabStyle}
-            >
-              📹 Video Studio
-            </button>
-            <button
-              onClick={() => setActiveTab("notes")}
-              style={activeTab === "notes" ? activeTabStyle : inactiveTabStyle}
-            >
-              📝 Notebook
-            </button>
-            <div style={{ width: 1, background: "var(--card-border)", margin: "0 8px" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/logo.png" alt="Cloud Notes Logo" style={{ width: 40, height: 40, borderRadius: 10 }} />
+            <div>
+              <h1 style={{ fontSize: "clamp(24px, 5vw, 28px)", fontWeight: 800, letterSpacing: "-0.5px" }}>Cloud Notes</h1>
+              <p className="hide-on-mobile" style={{ marginTop: 4, color: "var(--foreground)", opacity: 0.6 }}>AI-Powered Video Summarizer</p>
+            </div>
+          </div>
+          <div className="show-on-mobile">
             <UserButton afterSignOutUrl="/" />
+          </div>
+        </div>
+
+        <SignedIn>
+          <div style={{ display: "flex", gap: 8, background: "var(--card-bg)", border: "1px solid var(--card-border)", padding: 4, borderRadius: 12, width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 4, flex: 1 }}>
+              <button
+                onClick={() => setActiveTab("video")}
+                style={{ ...activeTab === "video" ? activeTabStyle : inactiveTabStyle, flex: 1, padding: "8px 12px" }}
+              >
+                <span className="hide-on-mobile">📹 Video Studio</span>
+                <span className="show-on-mobile">📹 Studio</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("notes")}
+                style={{ ...activeTab === "notes" ? activeTabStyle : inactiveTabStyle, flex: 1, padding: "8px 12px" }}
+              >
+                <span className="hide-on-mobile">📝 Notebook</span>
+                <span className="show-on-mobile">📝 Notes</span>
+              </button>
+            </div>
+            <div className="hide-on-mobile" style={{ width: 1, height: 24, background: "var(--card-border)", margin: "0 8px" }} />
+            <div className="hide-on-mobile">
+              <UserButton afterSignOutUrl="/" />
+            </div>
             <SignOutButton>
-              <button style={{ ...inactiveTabStyle, opacity: 1, color: "#ef4444", fontWeight: 700 }}>
-                Sign Out
+              <button style={{ ...inactiveTabStyle, opacity: 1, color: "#ef4444", fontWeight: 700, padding: "8px 12px" }}>
+                <span className="hide-on-mobile">Sign Out</span>
+                <span className="show-on-mobile">Exit</span>
               </button>
             </SignOutButton>
           </div>

@@ -6,15 +6,18 @@ export default function Home() {
     <div style={{ fontFamily: "var(--font-sans)", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
 
       {/* HEADER */}
-      <header style={{
+      <header className="container-padding" style={{
         padding: "20px 40px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         borderBottom: "1px solid var(--card-border)"
       }}>
-        <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.5px" }}>
-          Cloud Notes
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="/logo.png" alt="Cloud Notes Logo" style={{ width: 32, height: 32, borderRadius: 8 }} />
+          <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.5px" }}>
+            Cloud Notes
+          </div>
         </div>
         <div>
           <SignedOut>
@@ -24,14 +27,15 @@ export default function Home() {
           </SignedOut>
           <SignedIn>
             <Link href="/dashboard" style={btnTypePrimary}>
-              Go to Dashboard
+              <span className="hide-on-mobile">Go to Dashboard</span>
+              <span className="show-on-mobile">Dashboard</span>
             </Link>
           </SignedIn>
         </div>
       </header>
 
       {/* HERO SECTION */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 24px" }}>
+      <main className="container-padding" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "80px 24px" }}>
 
         <div style={{
           background: "linear-gradient(to right, #3b82f6, #8b5cf6)",
@@ -47,7 +51,7 @@ export default function Home() {
         </div>
 
         <h1 style={{
-          fontSize: "clamp(40px, 8vw, 72px)",
+          fontSize: "clamp(32px, 10vw, 72px)",
           fontWeight: 800,
           lineHeight: 1.1,
           maxWidth: 900,
@@ -59,7 +63,7 @@ export default function Home() {
         </h1>
 
         <p style={{
-          fontSize: 20,
+          fontSize: "clamp(16px, 4vw, 20px)",
           color: "var(--foreground)",
           opacity: 0.6,
           maxWidth: 600,
@@ -69,23 +73,23 @@ export default function Home() {
           Upload any video url or file. Our AI extracts the audio, transcribes it, and generates structured, readable notes instantly.
         </p>
 
-        <div style={{ display: "flex", gap: 16 }}>
+        <div style={{ display: "flex", gap: 16, flexDirection: "column", alignItems: "center" }}>
           <SignedOut>
             <SignInButton mode="modal">
-              <button style={{ ...btnTypePrimary, padding: "16px 32px", fontSize: 18 }}>
+              <button style={{ ...btnTypePrimary, padding: "16px 32px", fontSize: 18, width: "100%", maxWidth: 300 }}>
                 Get Started for Free
               </button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <Link href="/dashboard" style={{ ...btnTypePrimary, padding: "16px 32px", fontSize: 18 }}>
+            <Link href="/dashboard" style={{ ...btnTypePrimary, padding: "16px 32px", fontSize: 18, width: "100%", maxWidth: 300 }}>
               Launch Studio
             </Link>
           </SignedIn>
         </div>
 
         {/* FEATURE HIGHLIGHTS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24, marginTop: 100, maxWidth: 1200, width: "100%", textAlign: "left" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, marginTop: 100, maxWidth: 1200, width: "100%", textAlign: "left" }}>
           <FeatureCard
             icon="🎥"
             title="Video to Text"
@@ -106,7 +110,7 @@ export default function Home() {
       </main>
 
       {/* FOOTER */}
-      <footer style={{ padding: 40, textAlign: "center", borderTop: "1px solid var(--card-border)", opacity: 0.4, fontSize: 14 }}>
+      <footer className="container-padding" style={{ padding: 40, textAlign: "center", borderTop: "1px solid var(--card-border)", opacity: 0.4, fontSize: 14 }}>
         © 2026 Cloud Notes. All rights reserved.
       </footer>
     </div>
