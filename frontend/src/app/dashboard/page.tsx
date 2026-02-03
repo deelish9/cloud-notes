@@ -56,14 +56,41 @@ function HighlightText({ text, query }: { text: string; query: string }) {
 }
 
 function MarkdownViewer({ content, searchQuery = "" }: { content: string; searchQuery?: string }) {
-  const components = {
-    text: ({ node, children, ...props }: any) => {
-      // Highlighting in text nodes
-      if (typeof children === "string" && searchQuery) {
-        return <HighlightText text={children} query={searchQuery} />;
+  // Helper to highlight text within children (potentially nested)
+  const renderWithHighlights = (children: any): any => {
+    if (typeof children === "string") {
+      return <HighlightText text={children} query={searchQuery} />;
+    }
+    if (Array.isArray(children)) {
+      return children.map((child, i) => (
+        <React.Fragment key={i}>{renderWithHighlights(child)}</React.Fragment>
+      ));
+    }
+    if (React.isValidElement(children)) {
+      // If it's an element (like <strong> or <em>), we need to process its children too
+      const { props } = children as any;
+      if (props && props.children) {
+        return React.cloneElement(
+          children as React.ReactElement,
+          {},
+          renderWithHighlights(props.children)
+        );
       }
-      return children;
-    },
+    }
+    return children;
+  };
+
+  const components = {
+    p: ({ children }: any) => <p>{renderWithHighlights(children)}</p>,
+    li: ({ children }: any) => <li>{renderWithHighlights(children)}</li>,
+    h1: ({ children }: any) => <h1>{renderWithHighlights(children)}</h1>,
+    h2: ({ children }: any) => <h2>{renderWithHighlights(children)}</h2>,
+    h3: ({ children }: any) => <h3>{renderWithHighlights(children)}</h3>,
+    h4: ({ children }: any) => <h4>{renderWithHighlights(children)}</h4>,
+    em: ({ children }: any) => <em>{renderWithHighlights(children)}</em>,
+    strong: ({ children }: any) => <strong>{renderWithHighlights(children)}</strong>,
+    td: ({ children }: any) => <td>{renderWithHighlights(children)}</td>,
+    th: ({ children }: any) => <th>{renderWithHighlights(children)}</th>,
   };
 
   return (
