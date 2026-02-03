@@ -95,7 +95,7 @@ body {
 /* Markdown Rendering Styles */
 .markdown-content {
   line-height: 1.6;
-  color: #18181b;
+  color: var(--foreground);
   font-size: 15px;
 }
 
@@ -110,14 +110,14 @@ body {
   margin-top: 24px;
   margin-bottom: 12px;
   font-weight: 800;
-  color: #000;
+  color: var(--foreground);
   text-transform: uppercase;
   letter-spacing: -0.01em;
 }
 
 .markdown-content strong {
   font-weight: 700;
-  color: #000;
+  color: var(--foreground);
 }
 
 .markdown-content ul,
