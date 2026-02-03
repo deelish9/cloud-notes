@@ -581,8 +581,21 @@ export default function DashboardPage() {
                     if (j.transcript) setTranscriptText(j.transcript);
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {j.filename}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                      {j.filename}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteJob(j.id);
+                      }}
+                      style={miniDeleteBtnStyle}
+                      className="btn-interactive"
+                      title="Delete Job"
+                    >
+                      🗑️
+                    </button>
                   </div>
 
                   {/* Progress */}
@@ -912,6 +925,19 @@ const deleteBtnStyle: React.CSSProperties = {
   fontWeight: 600,
   cursor: "pointer",
   border: "none",
+};
+
+const miniDeleteBtnStyle: React.CSSProperties = {
+  background: "transparent",
+  color: "#ef4444",
+  padding: "4px",
+  borderRadius: "6px",
+  fontSize: "14px",
+  cursor: "pointer",
+  border: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const cardStyle: React.CSSProperties = {
