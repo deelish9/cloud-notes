@@ -667,7 +667,7 @@ export default function DashboardPage() {
                   <h3 style={{ fontSize: 16, fontWeight: 700 }}>AI Summary</h3>
                   <button onClick={generateSummary} style={btnStyle} className="btn-interactive">
                     {jobs.find(j => j.id === selectedJobId)?.status === "done" ? "🔄 Regenerate Summary" :
-                      jobs.find(j => j.id === selectedJobId)?.status === "failed" ? "retry Try Again" :
+                      jobs.find(j => j.id === selectedJobId)?.status === "failed" ? "🔄 Try Again" :
                         "✨ Generate Summary"}
                   </button>
                 </div>
