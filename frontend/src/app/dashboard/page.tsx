@@ -685,9 +685,9 @@ export default function DashboardPage() {
                 </div>
 
                 {jobs.find(j => j.id === selectedJobId)?.summary ? (
-                  <div style={{ background: "#fff", padding: 24, borderRadius: 12, border: "1px solid var(--card-border)", color: "#18181b" }}>
+                  <div style={{ background: "var(--card-bg)", padding: 24, borderRadius: 12, border: "1px solid var(--card-border)", color: "var(--foreground)" }}>
                     <MarkdownViewer content={jobs.find(j => j.id === selectedJobId)?.summary || ""} />
-                    <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid #eee" }}>
+                    <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--card-border)" }}>
                       <button onClick={() => saveJobAsNote(selectedJobId)} style={btnStyleSecondary} className="btn-interactive">Save to Notebook</button>
                     </div>
                   </div>
@@ -759,7 +759,7 @@ export default function DashboardPage() {
                   <button onClick={() => deleteNote(n.id)} style={{ ...deleteBtnStyle, background: "transparent" }} className="btn-interactive">×</button>
                 </div>
               </div>
-              <div style={{ flex: 1, overflowY: "auto", fontSize: 14, color: "#18181b", background: "#fff", padding: 12, borderRadius: 8, border: "1px solid #eee" }}>
+              <div style={{ flex: 1, overflowY: "auto", fontSize: 14, color: "var(--foreground)", background: "var(--background)", padding: 12, borderRadius: 8, border: "1px solid var(--card-border)" }}>
                 <MarkdownViewer content={n.content} />
               </div>
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--card-border)", fontSize: 12, color: "var(--foreground)", opacity: 0.5 }}>
